@@ -1,0 +1,6 @@
+{
+  "name": "Crash Manager",
+  "description": "Sistema operativo de gestión para salones de billar: tablero de mesas en tiempo real, consumos de cantina, analíticas y control de caja.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
