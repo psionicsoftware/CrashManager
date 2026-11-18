@@ -1,236 +1,292 @@
 import React, { useState } from 'react';
-import {
-  ArrowRight,
-  Eye,
-  EyeOff,
-  Lock,
-  ShieldCheck,
-  User,
-} from 'lucide-react';
-import { OPERATORS } from '../data/mockData';
+import { AlertCircle } from 'lucide-react';
+import { authService } from '../services/authService';
 import { Operator } from '../types/billiards';
 
 interface LoginScreenProps {
-  currentOperator: Operator;
   onLogin: (operator: Operator) => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({
-  currentOperator,
-  onLogin,
-}) => {
-  const [email, setEmail] = useState('jorge@crashmanager.com');
-  const [password, setPassword] = useState('••••••••••••');
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [forgotHint, setForgotHint] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setErrorMsg('Ingresa un operador y contraseña de control válidos.');
-      return;
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      const session = await authService.login(username, password);
+      onLogin(session.operator);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Usuario/contraseña no válidos';
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
     }
-    const matched =
-      OPERATORS.find(
-        (op) =>
-          op.email.toLowerCase() === email.trim().toLowerCase() ||
-          op.name.toLowerCase() === email.trim().toLowerCase()
-      ) || currentOperator;
-    onLogin(matched);
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f8faff] flex flex-col relative overflow-hidden">
-      {/* Soft ambient radial wash */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at 82% 88%, rgba(16, 185, 129, 0.08), transparent 42%), radial-gradient(circle at 12% 15%, rgba(14, 165, 233, 0.06), transparent 45%)',
-        }}
-      />
-
-      {/* Minimal Top Bar */}
-      <header className="relative z-10 w-full px-6 py-4 flex items-center justify-between border-b border-slate-200/70 bg-white/80 backdrop-blur-sm">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#eff4ff] border border-emerald-200 flex items-center justify-center text-[#006948]">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <div className="leading-tight">
-            <div className="text-sm font-extrabold tracking-tight text-[#0b1c30]">
-              CRASH
+    <div className="min-h-screen w-full bg-surface text-on-surface antialiased flex flex-col justify-between relative">
+      {/* Fixed Minimal Top Bar */}
+      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="h-16 w-full px-6 sm:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary text-[20px]">
+                sports_bar
+              </span>
             </div>
-            <div className="text-[10px] font-mono font-semibold tracking-wider text-slate-500">
-              MANAGER OPS
+            <div className="flex flex-col">
+              <span className="text-[20px] font-semibold tracking-tight text-on-surface leading-none">
+                CRASH
+              </span>
+              <span className="font-mono text-[12px] font-medium text-on-surface-variant uppercase tracking-wider mt-0.5">
+                Manager Ops
+              </span>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600">
-            <Lock className="w-3 h-3 text-[#006948]" />
-            Auth Gate · Secure
-          </span>
-          <div className="w-9 h-9 rounded-full bg-[#006948] text-white flex items-center justify-center shadow-sm">
-            <User className="w-4 h-4" />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[11px] font-semibold tracking-wider text-on-surface-variant">
+                Auth Gate • Secure
+              </span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <span className="material-symbols-outlined text-on-primary text-[18px]">
+                person
+              </span>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Centered Login Card */}
-      <main className="relative z-10 flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-[440px] bg-white rounded-2xl border border-slate-200/90 shadow-[0_20px_50px_-15px_rgba(11,28,48,0.1)] overflow-hidden">
-          {/* Card Header */}
-          <div className="px-7 py-5 bg-[#f8fbff] border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#006948] text-white flex items-center justify-center shadow-sm">
-                <span className="font-mono font-bold text-base">CM</span>
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-[#0b1c30] leading-tight">
-                  Crash Manager
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Control de Mesas · Gestión de Salón
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-              POS
-            </span>
+      {/* Main Content */}
+      <main className="w-full pt-16 bg-surface flex-1 flex flex-col items-center justify-center">
+        <div className="relative w-full min-h-[calc(100vh-4rem-3.5rem)] flex items-center justify-center px-4 sm:px-8 py-10 overflow-hidden">
+          {/* Background Architectural Ambience */}
+          <div className="absolute inset-0 pointer-events-none opacity-40 overflow-hidden">
+            <div className="absolute -top-32 -left-20 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+            <div className="absolute -bottom-40 -right-24 w-[32rem] h-[32rem] rounded-full bg-secondary-container/20 blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-72 bg-gradient-to-r from-primary-fixed/20 via-surface-container-high/40 to-secondary-fixed/20 blur-2xl" />
           </div>
 
-          {/* Card Form */}
-          <form onSubmit={handleSubmit} className="p-7 space-y-5">
-            <div>
-              <h1 className="text-xl font-bold text-[#0b1c30] tracking-tight">
-                Acceso Operativo de Turno
-              </h1>
-              <p className="text-xs text-slate-500 mt-1">
-                Ingresa tus credenciales o selecciona un operador asignado.
-              </p>
-            </div>
-
-            {errorMsg && (
-              <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
-                {errorMsg}
+          {/* Central Floor Staff Login Module */}
+          <div className="relative z-10 w-full max-w-[490px] flex flex-col items-center">
+            {/* Core Administrative Card */}
+            <div className="w-full bg-surface-container-lowest rounded-xl shadow-xl p-4 sm:p-6 flex flex-col">
+              {/* Table Slate Pocket Accents */}
+              <div className="flex items-center justify-between pb-4 mb-4 bg-surface-container-low/60 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 pt-4 rounded-t-xl">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center shadow-md shadow-primary/20">
+                    <span className="material-symbols-outlined text-[24px]">
+                      sports_bar
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[20px] font-bold text-on-surface leading-none tracking-tight">
+                      Crash Manager
+                    </span>
+                    <span className="text-[12px] text-on-surface-variant mt-1">
+                      Control de Mesas • Gestión de Salón
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className="w-3 h-3 rounded-full bg-primary/20 flex items-center justify-center"
+                  aria-hidden="true"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                </div>
               </div>
-            )}
 
-            {forgotHint && (
-              <div className="px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
-                Clave de turno demo preconfigurada. Presiona{' '}
-                <span className="font-semibold">Iniciar Sesión en el Turno</span>{' '}
-                para acceder.
+              {/* Section Title */}
+              <div className="flex flex-col mb-4">
+                <h1 className="text-[24px] leading-8 text-on-surface font-bold tracking-tight">
+                  Acceso Operativo de Turno
+                </h1>
               </div>
-            )}
 
-            <div className="space-y-1.5">
-              <label
-                htmlFor="operator-email"
-                className="block text-[11px] font-semibold tracking-wider text-slate-500 uppercase"
+              {/* Authentication Form */}
+              <form
+                onSubmit={handleSubmit}
+                noValidate
+                className="flex flex-col gap-4"
               >
-                Usuario u Operador
-              </label>
-              <input
-                id="operator-email"
-                type="text"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setErrorMsg('');
-                }}
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#f8fafc] border border-slate-200 text-sm font-medium text-[#0b1c30] focus:outline-none focus:bg-white focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15 transition-all"
-                placeholder="operador@crashmanager.com"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="operator-password"
-                  className="block text-[11px] font-semibold tracking-wider text-slate-500 uppercase"
-                >
-                  Contraseña de Control
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setForgotHint((v) => !v)}
-                  className="text-xs font-semibold text-[#006948] hover:underline"
-                >
-                  ¿Olvidaste tu clave?
-                </button>
-              </div>
-              <div className="relative">
-                <input
-                  id="operator-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setErrorMsg('');
-                  }}
-                  className="w-full pl-3.5 pr-10 py-2.5 rounded-lg bg-[#f8fafc] border border-slate-200 text-sm font-medium text-[#0b1c30] focus:outline-none focus:bg-white focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15 transition-all"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  aria-label="Mostrar contraseña"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 px-4 rounded-xl bg-[#006948] hover:bg-[#00583c] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors"
-            >
-              <span>Iniciar Sesión en el Turno</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            {/* Quick Operator Switcher */}
-            <div className="pt-3 border-t border-slate-100">
-              <p className="text-[11px] font-medium text-slate-400 mb-2">
-                Cambio rápido de operador de guardia:
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {OPERATORS.map((op) => (
-                  <button
-                    key={op.id}
-                    type="button"
-                    onClick={() => {
-                      setEmail(op.email);
-                      setPassword('••••••••••••');
-                      setErrorMsg('');
-                    }}
-                    className={`px-2.5 py-2 rounded-lg border text-left transition-all flex items-center gap-2 ${
-                      email.toLowerCase() === op.email.toLowerCase()
-                        ? 'border-[#006948] bg-emerald-50/70 text-[#006948]'
-                        : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
-                    }`}
+                {/* Field 1: Operator / Username */}
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="operator-id"
+                    className="text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold"
                   >
-                    <span className="w-6 h-6 rounded-full bg-slate-100 text-[10px] font-bold flex items-center justify-center shrink-0 text-slate-700">
-                      {op.initials}
+                    Usuario u Operador
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3 text-outline flex items-center justify-center pointer-events-none">
+                      <span className="material-symbols-outlined text-[20px]">
+                        badge
+                      </span>
                     </span>
-                    <span className="text-xs font-semibold truncate">
-                      {op.shortName}
+                    <input
+                      id="operator-id"
+                      type="text"
+                      autoComplete="username"
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        if (errorMessage) setErrorMessage(null);
+                      }}
+                      placeholder="admin"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-[14px] placeholder:text-on-surface-variant/40 shadow-sm transition-all focus:outline-none focus:bg-surface-container-low focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* Field 2: Password */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex justify-between items-center">
+                    <label
+                      htmlFor="operator-password"
+                      className="text-[11px] uppercase tracking-wider text-on-surface-variant font-semibold"
+                    >
+                      Contraseña de Control
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setForgotHint((prev) => !prev)}
+                      className="text-[12px] text-primary hover:text-primary-container font-semibold transition-colors"
+                    >
+                      ¿Olvidaste tu clave?
+                    </button>
+                  </div>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3 text-outline flex items-center justify-center pointer-events-none">
+                      <span className="material-symbols-outlined text-[20px]">
+                        lock
+                      </span>
                     </span>
-                  </button>
-                ))}
+                    <input
+                      id="operator-password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errorMessage) setErrorMessage(null);
+                      }}
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-[14px] placeholder:text-on-surface-variant/40 shadow-sm transition-all focus:outline-none focus:bg-surface-container-low focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Alternar visibilidad de contraseña"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 text-outline hover:text-on-surface flex items-center justify-center transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {showPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {forgotHint && (
+                  <div className="px-3 py-2 rounded-lg bg-surface-container-low border border-primary/20 text-[12px] text-on-surface-variant">
+                    Entorno operativo local: ingresa usuario{' '}
+                    <span className="font-mono font-semibold text-primary">
+                      admin
+                    </span>{' '}
+                    y clave{' '}
+                    <span className="font-mono font-semibold text-primary">
+                      123
+                    </span>
+                    .
+                  </div>
+                )}
+
+                {errorMessage && (
+                  <div
+                    role="alert"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-error-container border border-error/25 text-on-error-container text-[13px] font-semibold"
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0 text-error" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {/* Primary Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="relative w-full mt-1 group overflow-hidden rounded-lg bg-primary hover:bg-primary-container active:scale-[0.99] disabled:opacity-60 text-on-primary text-[16px] font-bold py-3 px-4 shadow-md shadow-primary/25 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>
+                    {isSubmitting
+                      ? 'Validando...'
+                      : 'Iniciar Sesión en el Turno'}
+                  </span>
+                  <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">
+                    arrow_forward
+                  </span>
+                </button>
+              </form>
+
+              {/* Shift Divider */}
+              <div className="relative flex items-center justify-center mt-5">
+                <div className="w-full h-px bg-surface-container-high" />
               </div>
             </div>
-          </form>
+          </div>
         </div>
       </main>
+
+      {/* Telemetry Footer */}
+      <footer className="w-full bg-surface-container-lowest/60 backdrop-blur-sm py-4 border-t border-surface-container-high/50">
+        <div className="w-full px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[12px] font-medium text-on-surface-variant">
+              v2.4.19-prod
+            </span>
+            <span className="text-outline-variant font-mono text-[12px]">
+              |
+            </span>
+            <span className="text-[12px] text-on-surface-variant">
+              Crash Manager Venue Telemetry Systems
+            </span>
+          </div>
+          <div className="flex items-center gap-6">
+            <a
+              href="#system-status"
+              onClick={(e) => e.preventDefault()}
+              className="text-[12px] text-on-surface-variant hover:text-on-surface transition-colors"
+            >
+              Node Status
+            </a>
+            <a
+              href="#terminal-help"
+              onClick={(e) => e.preventDefault()}
+              className="text-[12px] text-on-surface-variant hover:text-on-surface transition-colors"
+            >
+              Support Desk
+            </a>
+            <a
+              href="#legal-compliance"
+              onClick={(e) => e.preventDefault()}
+              className="text-[12px] text-on-surface-variant hover:text-on-surface transition-colors"
+            >
+              Security Policy
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

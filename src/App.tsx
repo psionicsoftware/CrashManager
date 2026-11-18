@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
 import { AnalyticsView } from './components/AnalyticsView';
@@ -42,7 +43,8 @@ import {
 } from './utils/format';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentOperator, setCurrentOperator] = useState<Operator>(
     OPERATORS[0]
   );
@@ -581,20 +583,19 @@ export default function App() {
     notify(`Estado de promoción actualizado en Mesa ${String(tableId).padStart(2, '0')}.`);
   };
 
-  if (!isAuthenticated) {
-    return (
-      <LoginScreen
-        currentOperator={currentOperator}
-        onLogin={(op) => {
-          setCurrentOperator(op);
-          setIsAuthenticated(true);
-          notify(`Turno iniciado como ${op.name}.`);
-        }}
-      />
-    );
-  }
+  const handleLoginSuccess = (op: Operator) => {
+    setCurrentOperator(op);
+    setIsAuthenticated(true);
+    notify(`Turno iniciado como ${op.name}.`);
+    navigate('/dashboard', { replace: true });
+  };
 
-  return (
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    navigate('/', { replace: true });
+  };
+
+  const dashboardElement = (
     <div className="min-h-screen w-full bg-[#f4f7fb] text-[#0b1c30] flex flex-col lg:flex-row">
       {/* Persistent Left Sidebar */}
       <Sidebar
@@ -616,7 +617,7 @@ export default function App() {
           onOpenRateModal={() => setRateModalOpen(true)}
           clockStr={clockStr}
           currentOperator={currentOperator}
-          onLockShift={() => setIsAuthenticated(false)}
+          onLockShift={handleLogout}
           onSwitchOperator={(op) => {
             setCurrentOperator(op);
             notify(`Operador cambiado a ${op.name}.`);
@@ -804,7 +805,7 @@ export default function App() {
           onClose={() => setReceiptModalState(null)}
           onConfirmCloseShift={() => {
             setReceiptModalState(null);
-            setIsAuthenticated(false);
+            handleLogout();
           }}
         />
       )}
@@ -825,5 +826,32 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <LoginScreen onLogin={handleLoginSuccess} />
+          )
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          isAuthenticated ? dashboardElement : <Navigate to="/" replace />
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <Navigate to={isAuthenticated ? '/dashboard' : '/'} replace />
+        }
+      />
+    </Routes>
   );
 }
