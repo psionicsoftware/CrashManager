@@ -1,32 +1,51 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+# Project context
+# Constraints that guide OpenSpec artifacts and workflows.
+context: |
+  Project: Crash Manager — Operational POS and floor management web application for billiard/pool halls and bar/canteen ("salón de pool y cantina/bar"). Designed to help floor staff and cashiers manage pool tables in real time, players, canteen/bar product consumptions, session billing, and cash register shifts.
+  Architecture & Stack:
+    - Frontend: React 19, TypeScript, Vite 8, Tailwind CSS v4 (@tailwindcss/vite), Motion (motion/react), and Lucide React.
+    - UI Prototyping & Imports: Reference HTML screens exported from Google Stitch are stored in 'stich-html-import/' and adapted into modular React + TypeScript components.
+    - State & Data Layer: Client-side reactive state, domain models ('src/types/billiards.ts'), billing/time utilities ('src/utils/format.ts'), and structured data stores/services prepared for backend persistence.
+    - Version Control: GitHub repository (psionicsoftware/CrashManager).
+  Engineering Principles:
+    - Apply Clean Architecture and Clean Code principles (separation of concerns: UI views & modals -> custom hooks & billing/domain utilities -> data/service layer).
+    - Avoid over-engineering: keep designs simple, pragmatic, and directly maintainable. No premature abstractions or redundant wrapper layers when a direct component, hook, or utility function is sufficient.
+    - STRICT TESTING CONSTRAINT: Tasks must NEVER include automated e2e or integration test suites (no Cypress, Playwright, etc.). All primary testing, verification, and QA are conducted manually by the developer in the browser.
+  Language Domain:
+    - Technical OpenSpec planning artifacts (proposals, designs, specs, tasks) are written in English.
+    - User-facing UI copy, billiard/pool hall & bar terminology, and operator/cashier workflows are in Spanish (es-AR).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+# Per-artifact rules
+rules:
+  proposal:
+    - "Keep proposals concise, structured, and under 500 words."
+    - "Always define clear 'In Scope' and 'Out of Scope' boundaries."
+    - "Explicitly state whether the change impacts domain types/data models ('src/types/'), billing/time calculation utilities ('src/utils/'), or frontend UI views/modals ('src/components/')."
+  design:
+    - "Follow Clean Architecture: separate presentation (React components and modals), business/billing logic (custom hooks and utilities), and data access/state management."
+    - "Avoid over-engineering: prioritize standard React 19 patterns and strict TypeScript types over custom state machines or complex abstraction layers unless strictly necessary."
+    - "When a screen has a reference prototype in 'stich-html-import/', align layout structure and Tailwind CSS v4 tokens with that reference while keeping components modular."
+  specs:
+    - "Frame requirements around practical pool hall and bar/canteen staff user journeys (table start/pause/transfer/close, player assignment, canteen item consumption, ticket issuance, and cash drawer X/Z shifts)."
+    - "Define Gherkin Given/When/Then scenarios structured so they can be easily executed and verified manually in the UI."
+  tasks:
+    - "STRICT: Never include automated integration or e2e testing tasks."
+    - "Unit testing: only include in critical parts of the system such as Login, Table Billing & Canteen Sales, Data/DB migrations, and Ticket Printing/Cash Closure."
+    - "Every task must include concise manual verification steps for the developer (e.g. check UI behavior, verify timer/rate calculations, inspect state updates)."
+    - "Break implementation into small, incremental tasks of maximum 1 to 2 hours of effort."
+    - "Organize tasks logically: 1) Domain types/data schema -> 2) Business logic/services/hooks -> 3) UI views/components -> 4) Manual verification."
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+# Per-operation guidance
+operations:
+  apply:
+    guidance:
+      - "Adhere to Clean Code: meaningful naming, single responsibility, early returns, strict TypeScript types, and zero console logs in production code."
+      - "Ensure all code compiles cleanly with 'npm run lint' (tsc --noEmit) and 'npm run build' before marking tasks complete."
+      - "Provide the developer with clear, step-by-step manual testing instructions to validate the feature directly in the browser (http://localhost:3000)."
+  archive:
+    guidance:
+      - "Summarize changes applied across domain types, billing/service logic, and UI components."
+      - "Highlight any pending environment variables, database/storage migrations, or deployment requirements before finishing."
+
