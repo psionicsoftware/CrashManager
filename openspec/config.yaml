@@ -37,7 +37,7 @@ rules:
     - "Break implementation into small, incremental tasks of maximum 1 to 2 hours of effort."
     - "Organize tasks logically: 1) Domain types/data schema -> 2) Business logic/services/hooks -> 3) UI views/components -> 4) Manual verification."
 
-# Per-operation guidance
+# Per-operation guidance - sample
 operations:
   apply:
     guidance:
